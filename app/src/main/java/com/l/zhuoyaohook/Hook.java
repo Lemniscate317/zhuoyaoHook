@@ -3,15 +3,22 @@ package com.l.zhuoyaohook;
 import android.app.Application;
 import android.content.Context;
 
-import java.util.Queue;
-
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class Hook implements IXposedHookLoadPackage {
+
+    private final XSharedPreferences sp;
+
+    public Hook() {
+        sp = new XSharedPreferences(BuildConfig.APPLICATION_ID, "config");
+        sp.makeWorldReadable();
+    }
+
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
         if (lpparam.packageName.contains("com.tencent.gwgo")) {
