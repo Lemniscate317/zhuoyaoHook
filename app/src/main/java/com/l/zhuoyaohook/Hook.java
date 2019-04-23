@@ -31,6 +31,21 @@ public class Hook implements IXposedHookLoadPackage {
 
                     ClassLoader classLoader = ((Context) param.args[0]).getClassLoader();
 
+                    Class<?> sensorEventQueue_Class = Class.forName("android.hardware.SystemSensorManager$SensorEventQueue");
+                    if (sensorEventQueue_Class != null) {
+                        XposedBridge.hookAllMethods(sensorEventQueue_Class, "dispatchSensorEvent", new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                                sp.reload();
+                                if (sp.getBoolean("isSwitch", false)) {
+                                    int num = sp.getInt("num", 2);
+                                    ((float[]) param.args[1])[0] = ((float[]) param.args[1])[0] * num;
+                                }
+                                super.beforeHookedMethod(param);
+                            }
+                        });
+                    }
+
                     //vm fake camera vbox
                     Class<?> info_b_Class = classLoader.loadClass("com.tencent.bugly.msdk.crashreport.common.info.b");
                     if (info_b_Class != null) {
