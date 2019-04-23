@@ -2,21 +2,63 @@ package com.l.zhuoyaohook;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Environment;
+import android.text.TextUtils;
+
+import java.io.File;
+import java.io.FileInputStream;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class Hook implements IXposedHookLoadPackage {
 
-    private final XSharedPreferences sp;
+    int multi = 2;
+
 
     public Hook() {
-        sp = new XSharedPreferences(BuildConfig.APPLICATION_ID, "config");
-        sp.makeWorldReadable();
+        File file = new File(Environment.getExternalStorageDirectory() + "/zhuoyaohookconfig.txt");
+        String string = readString(file.getAbsolutePath(), "utf-8");
+        if (!TextUtils.isEmpty(string)) {
+            try {
+                Integer integer = Integer.valueOf(string);
+                int i = integer.intValue();
+                multi = i;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static String readString(String file, String charset) {
+        byte[] data = readBytes(file);
+        String ret = null;
+
+        try {
+            ret = new String(data, charset);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return ret;
+    }
+
+    public static byte[] readBytes(String file) {
+        try {
+            FileInputStream fis = new FileInputStream(file);
+            int len = fis.available();
+            byte[] buffer = new byte[len];
+            fis.read(buffer);
+            fis.close();
+            return buffer;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        return null;
+
     }
 
     @Override
@@ -36,11 +78,8 @@ public class Hook implements IXposedHookLoadPackage {
                         XposedBridge.hookAllMethods(sensorEventQueue_Class, "dispatchSensorEvent", new XC_MethodHook() {
                             @Override
                             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                                sp.reload();
-                                if (sp.getBoolean("isSwitch", false)) {
-                                    int num = sp.getInt("num", 2);
-                                    ((float[]) param.args[1])[0] = ((float[]) param.args[1])[0] * num;
-                                }
+
+                                ((float[]) param.args[1])[0] = ((float[]) param.args[1])[0] * multi;
                                 super.beforeHookedMethod(param);
                             }
                         });
