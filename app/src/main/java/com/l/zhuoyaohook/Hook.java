@@ -166,6 +166,28 @@ public class Hook implements IXposedHookLoadPackage {
                         });
                     }
 
+                    Class<?> permission_bridge_Class = classLoader.loadClass("com.tencent.gwgo.PermissionBridge");
+                    if (permission_bridge_Class != null) {
+                        XposedHelpers.findAndHookMethod(permission_bridge_Class, "NetworkLocationEnable", new XC_MethodHook() {
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                super.afterHookedMethod(param);
+                                param.setResult(true);
+                            }
+                        });
+                    }
+
+                    Class<?> gi_Class = classLoader.loadClass("c.t.m.g.gi");
+                    if (gi_Class != null) {
+                        XposedHelpers.findAndHookMethod(gi_Class, "a", Context.class, new XC_MethodHook() {
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                super.afterHookedMethod(param);
+                                param.setResult(512);
+                            }
+                        });
+                    }
+
                     Class<?> tpConfig_Class = classLoader.loadClass("com.tencent.tpshell.TPConfig");
                     if (tpConfig_Class != null) {
                         XposedHelpers.findAndHookMethod(tpConfig_Class, "useReflectionMode", Context.class, new XC_MethodHook() {

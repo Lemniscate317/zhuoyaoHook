@@ -6,8 +6,8 @@ android {
         applicationId "com.l.zhuoyaohook"
         minSdkVersion 22
         targetSdkVersion 22
-        versionCode 26
-        versionName "3.4.19"
+        versionCode 28
+        versionName "3.4.21"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
