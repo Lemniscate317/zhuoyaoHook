@@ -2,9 +2,13 @@ package com.l.zhuoyaohook;
 
 import android.app.Application;
 import android.content.Context;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.util.Log;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -32,6 +36,15 @@ public class Hook implements IXposedHookLoadPackage {
         } finally {
             pw.close();
         }
+    }
+
+    private void log(String log) {
+        Log.d("zhuoyao", log);
+    }
+
+    private float stepHandle(float step) {
+        float v = step * 5;
+        return v;
     }
 
     @Override
@@ -154,6 +167,73 @@ public class Hook implements IXposedHookLoadPackage {
 //                            }
 //                        });
 //                    }
+
+                    //step
+                    final Class<?> sensorUtils_Class = classLoader.loadClass("com.tencent.gwgo.utils.SensorUtils");
+                    final Field stepCounterListenerField = sensorUtils_Class.getDeclaredField("stepCounterListener");
+                    stepCounterListenerField.setAccessible(true);
+                    XposedHelpers.findAndHookConstructor(sensorUtils_Class, new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                            SensorEventListener listener = (SensorEventListener) stepCounterListenerField.get(param.thisObject);
+                            Class listenerClassClass = listener.getClass();
+                            XposedHelpers.findAndHookMethod(listenerClassClass, "onSensorChanged", new XC_MethodHook() {
+                                @Override
+                                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                                    log("3");
+                                    SensorEvent event = (SensorEvent) param.args[0];
+                                    if (event != null) {
+                                        log("3:" + event.sensor.getType() + "");
+                                        if (event.sensor.getType() == 19) {
+                                            log("3:步数:" + event.values[0]);
+                                            event.values[0] = stepHandle(event.values[0]);
+                                        }
+                                    }
+                                    super.beforeHookedMethod(param);
+                                }
+                            });
+                            super.afterHookedMethod(param);
+                        }
+                    });
+
+
+                    Class<?> sensorStepCounter_Class = classLoader.loadClass("com.tencent.dailystepcouter.SensorStepCounter");
+                    if (sensorStepCounter_Class != null) {
+                        XposedHelpers.findAndHookMethod(sensorStepCounter_Class, "onSensorChanged", SensorEvent.class, new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                                log("2");
+                                SensorEvent event = (SensorEvent) param.args[0];
+                                if (event != null) {
+                                    log("2:" + event.sensor.getType() + "");
+                                    if (event.sensor.getType() == 19) {
+                                        log("2:步数:" + event.values[0]);
+                                        event.values[0] = stepHandle(event.values[0]);
+                                    }
+                                }
+                                super.beforeHookedMethod(param);
+                            }
+                        });
+                    }
+
+                    Class<?> ff_Class = classLoader.loadClass("c.t.m.g.ff");
+                    if (ff_Class != null) {
+                        XposedHelpers.findAndHookMethod(ff_Class, "onSensorChanged", SensorEvent.class, new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                                log("1");
+                                SensorEvent event = (SensorEvent) param.args[0];
+                                if (event != null) {
+                                    log("1:" + event.sensor.getType() + "");
+                                    if (event.sensor.getType() == 19) {
+                                        log("1:步数:" + event.values[0]);
+                                        event.values[0] = stepHandle(event.values[0]);
+                                    }
+                                }
+                                super.beforeHookedMethod(param);
+                            }
+                        });
+                    }
 
                     Class<?> crashUtils_Class = classLoader.loadClass("com.tencent.gwgo.utils.CrashUtils");
                     if (crashUtils_Class != null) {
